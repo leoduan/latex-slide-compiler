@@ -1,0 +1,102 @@
+{
+  "name": "latex-slide-compiler",
+  "displayName": "LaTeX Slide Compiler",
+  "description": "Compile individual slides (Beamer) or paragraph contexts (non-Beamer) with configurable surrounding counts.",
+  "version": "1.0.0",
+  "publisher": "your-publisher",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Other",
+    "Extension Packs"
+  ],
+  "repository": {
+  "type": "git",
+  "url": "https://github.com/leoduan/latex-slide-compiler.git"
+  },
+  "activationEvents": [
+    "onCommand:extension.compileCurrentSlide",
+    "onCommand:extension.compileSurroundingSlides",
+    "onCommand:extension.compileParagraphContext",
+    "onCommand:extension.toggleCompileOnChange"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension.compileCurrentSlide",
+        "title": "Compile Current Slide (Beamer)"
+      },
+      {
+        "command": "extension.compileSurroundingSlides",
+        "title": "Compile Surrounding Slides (Beamer)"
+      },
+      {
+        "command": "extension.compileParagraphContext",
+        "title": "Compile Paragraph Context (Non-Beamer)"
+      },
+      {
+        "command": "extension.toggleCompileOnChange",
+        "title": "Toggle Compile on Change"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "extension.compileCurrentSlide",
+        "key": "ctrl+shift+c",
+        "when": "editorTextFocus && editorLangId == latex"
+      },
+      {
+        "command": "extension.compileSurroundingSlides",
+        "key": "ctrl+shift+f",
+        "when": "editorTextFocus && editorLangId == latex"
+      },
+      {
+        "command": "extension.compileParagraphContext",
+        "key": "ctrl+shift+p",
+        "when": "editorTextFocus && editorLangId == latex"
+      },
+      {
+        "command": "extension.toggleCompileOnChange",
+        "key": "ctrl+shift+t",
+        "when": "editorTextFocus && editorLangId == latex"
+      }
+    ],
+    "configuration": {
+      "title": "LaTeX Slide Compiler",
+      "properties": {
+        "latexSlideCompiler.slidesBefore": {
+          "type": "number",
+          "default": 2,
+          "description": "Number of slides before the current slide in a Beamer document."
+        },
+        "latexSlideCompiler.slidesAfter": {
+          "type": "number",
+          "default": 2,
+          "description": "Number of slides after the current slide in a Beamer document."
+        },
+        "latexSlideCompiler.paragraphsBefore": {
+          "type": "number",
+          "default": 10,
+          "description": "Number of paragraphs before the current paragraph in a non-Beamer document."
+        },
+        "latexSlideCompiler.paragraphsAfter": {
+          "type": "number",
+          "default": 10,
+          "description": "Number of paragraphs after the current paragraph in a non-Beamer document."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "typescript": "^4.0.0",
+    "vscode": "^1.1.37",
+    "@types/node": "^14.0.0"
+  }
+}
