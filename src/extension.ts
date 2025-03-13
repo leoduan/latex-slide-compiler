@@ -34,13 +34,11 @@ function mergeEnvironmentParagraphs(paragraphs: string[]): string[] {
  * except the PDF file (output.pdf).
  */
 function cleanupTemporaryFiles(tempFilePath: string, buildDir: string, jobname: string) {
-  // Delete the temporary .tex file.
   try {
     fs.unlinkSync(tempFilePath);
   } catch (err) {
     console.error(`Error deleting temp file ${tempFilePath}:`, err);
   }
-  // Delete all files with basename equal to jobname and not .pdf.
   try {
     const files = fs.readdirSync(buildDir);
     for (const file of files) {
@@ -99,7 +97,7 @@ ${slideContent}
   if (!fs.existsSync(buildDir)) {
     fs.mkdirSync(buildDir, { recursive: true });
   }
-  // Save the temporary .tex file in the build folder.
+  // Store temporary file in build folder.
   const tempFilePath = path.join(buildDir, 'currentSlide.tex');
   try {
     fs.writeFileSync(tempFilePath, tempDocument);
@@ -108,8 +106,8 @@ ${slideContent}
     return;
   }
 
-  // Use fixed jobname "output" so the generated PDF is always output.pdf.
-  const command = `pdflatex -jobname="output" -output-directory="${buildDir}" -interaction=nonstopmode -halt-on-error "${tempFilePath}"`;
+  // Use fixed jobname "output" so that the final PDF is always output.pdf.
+  const command = `pdflatex -jobname="output" -output-directory="${buildDir}" -interaction=nonstopmode "${tempFilePath}"`;
   vscode.window.showInformationMessage('Compiling current slide...');
   exec(command, { cwd: workspacePath }, (error, stdout, stderr) => {
     if (error) {
@@ -192,7 +190,7 @@ ${selectedFrames}
     vscode.window.showErrorMessage('Error writing temporary file: ' + err);
     return;
   }
-  const command = `pdflatex -jobname="output" -output-directory="${buildDir}" -interaction=nonstopmode -halt-on-error "${tempFilePath}"`;
+  const command = `pdflatex -jobname="output" -output-directory="${buildDir}" -interaction=nonstopmode "${tempFilePath}"`;
   vscode.window.showInformationMessage('Compiling surrounding slides...');
   exec(command, { cwd: workspacePath }, (error, stdout, stderr) => {
     if (error) {
@@ -207,6 +205,7 @@ ${selectedFrames}
 /**
  * Compile paragraph context for non-Beamer documents.
  * Compiles the current paragraph plus a configurable number of paragraphs before and after.
+ * Paragraphs that start with '%' or that are within a comment environment are ignored.
  */
 const compileParagraphContext = () => {
   const config = vscode.workspace.getConfiguration('latexSlideCompiler');
@@ -228,10 +227,16 @@ const compileParagraphContext = () => {
     return;
   }
   const header = fullText.substring(0, beginDocIndex);
-  const body = fullText.substring(beginDocIndex + '\\begin{document}'.length);
+  let body = fullText.substring(beginDocIndex + '\\begin{document}'.length);
 
-  let rawParagraphs = body.split(/\n\s*\n/);
-  rawParagraphs = rawParagraphs.map(p => p.trim()).filter(p => p.length > 0);
+  // Remove any text within \begin{comment} ... \end{comment}
+  body = body.replace(/\\begin\{comment\}[\s\S]*?\\end\{comment\}/g, "");
+
+  // Split the body into paragraphs based on blank lines.
+  // Filter out paragraphs that start with '%'
+  let rawParagraphs = body.split(/\n\s*\n/)
+    .map(p => p.trim())
+    .filter(p => p.length > 0 && !p.startsWith('%'));
   const paragraphs = mergeEnvironmentParagraphs(rawParagraphs);
 
   let cumulative = 0;
@@ -272,7 +277,7 @@ ${selectedParagraphs}
     vscode.window.showErrorMessage('Error writing temporary file: ' + err);
     return;
   }
-  const command = `pdflatex -jobname="output" -output-directory="${buildDir}" -interaction=nonstopmode -halt-on-error "${tempFilePath}"`;
+  const command = `pdflatex -jobname="output" -output-directory="${buildDir}" -interaction=nonstopmode "${tempFilePath}"`;
   vscode.window.showInformationMessage('Compiling paragraph context...');
   exec(command, { cwd: workspacePath }, (error, stdout, stderr) => {
     if (error) {
